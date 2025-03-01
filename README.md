@@ -2,13 +2,77 @@
 
 A Retrieval-Augmented Generation API for connectivity and telecommunications information built with FastAPI and LlamaIndex.
 
-## Features
+## Overview
 
-- Automatic PDF document indexing using FAISS vector store
-- Batch processing to handle large document collections
-- RAG-powered question answering
-- Chat history support for contextual responses
-- Swagger UI documentation
+ConnectSense RAG API is a Retrieval-Augmented Generation system built with FastAPI and LlamaIndex. It provides a powerful backend for querying a collection of PDF documents about connectivity and telecommunications topics. The system uses state-of-the-art embedding models and language models to provide accurate and contextually relevant answers to user queries.
+
+## Architecture
+
+The project follows a modular architecture with clear separation of concerns:
+
+```
+FastAPI_ConnectSense/
+├── app/
+│   ├── api/
+│   │   ├── routes/
+│   │   │   ├── chat.py         # Chat endpoints
+│   │   │   ├── index.py        # Index management endpoints
+│   │   │   └── __init__.py
+│   │   └── __init__.py
+│   ├── core/
+│   │   ├── config.py           # Application configuration
+│   │   └── __init__.py
+│   ├── models/
+│   │   ├── chat.py             # Pydantic models for API
+│   │   └── __init__.py
+│   ├── services/
+│   │   ├── vector_store.py     # Vector store service
+│   │   └── __init__.py
+│   ├── main.py                 # FastAPI application
+│   └── __init__.py
+├── data/                       # PDF documents
+├── vector_db/                  # Vector database storage
+├── streamlit/                  # Streamlit frontend
+├── .env                        # Environment variables
+├── .env.example                # Example environment variables
+├── README.md                   # Project documentation
+├── requirements.txt            # Dependencies
+└── run.py                      # Script to run the application
+```
+
+## Key Components
+
+### 1. Vector Store Service
+
+The `VectorStoreService` in `app/services/vector_store.py` is the core of the RAG system. It handles:
+
+- Loading PDF documents from the data folder
+- Creating a vector index from the documents
+- Processing documents in batches to handle large collections
+- Saving and loading the vector index
+- Querying the index with user questions
+
+The service uses FAISS (Facebook AI Similarity Search) for efficient vector storage and retrieval. It automatically initializes on application startup, either by loading an existing index or creating a new one if needed.
+
+### 2. API Routes
+
+The API provides several endpoints:
+
+- **Index Management**:
+  - `GET /index/status`: Check the status of the vector index
+
+- **Chat**:
+  - `POST /chat`: Chat with the RAG system with chat history
+  - `POST /chat/simple`: Simple chat endpoint for quick queries
+
+### 3. LLM Integration
+
+The system integrates with two language models:
+
+- **Groq**: Primary LLM using the llama-3.3-70b-versatile model
+- **Gemini**: Fallback LLM using the gemini-2.0-flash model
+
+It also uses the Gemini embedding model for document vectorization.
 
 ## Setup
 
@@ -46,13 +110,33 @@ python run.py
 
 The API will be available at http://localhost:8000
 
-## How it Works
+## Technical Features
 
-- On first run, the system will automatically create a vector index from all PDFs in the `data` folder
-- The documents are processed in batches to avoid memory issues
-- The vector index is saved to the `vector_db` directory
-- On subsequent runs, the system will load the existing index from the `vector_db` directory
-- If you add new documents to the `data` folder, you can trigger a reindex by deleting the `vector_db` folder
+### Automatic Index Creation
+
+The system automatically creates a vector index on first run:
+
+1. Checks if an index exists in the vector_db folder
+2. If not, loads all PDFs from the data folder
+3. Processes documents in batches to avoid memory issues
+4. Saves the index for future use
+
+### Batch Processing
+
+To handle large document collections efficiently, the system:
+
+1. Processes the first document to initialize the index
+2. Processes remaining documents in small batches (default: 3 documents per batch)
+3. Saves progress after each batch to avoid losing work
+4. Includes small delays between batches to allow for resource cleanup
+
+### Error Handling and Fallbacks
+
+The system includes robust error handling:
+
+- Tries Groq LLM first, falls back to Gemini if Groq fails
+- Handles PDF parsing errors gracefully
+- Provides clear error messages in API responses
 
 ## API Endpoints
 
@@ -63,13 +147,11 @@ The API will be available at http://localhost:8000
 ### Index Management
 
 - `GET /index/status` - Check the status of the vector index
-- `POST /index/create` - Create a new vector index from documents in the data folder
-- `GET /index/load` - Load an existing vector index
 
 ### Chat
 
 - `POST /chat` - Chat with the RAG system (with chat history)
-- `POST /chat/simple?query=your_question` - Simple chat endpoint for quick queries
+- `POST /chat/simple` - Simple chat endpoint for quick queries
 
 ## Example Usage
 
@@ -82,7 +164,9 @@ curl -X GET http://localhost:8000/index/status
 ### Ask a Question
 
 ```bash
-curl -X POST http://localhost:8000/chat/simple?query=What%20are%20the%20challenges%20of%20connectivity%20in%20South%20Asia%3F
+curl -X POST http://localhost:8000/chat/simple \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What are the challenges of connectivity in South Asia?"}'
 ```
 
 ### Chat with History
@@ -97,3 +181,23 @@ curl -X POST http://localhost:8000/chat \
       {"role": "assistant", "content": "Hello! I'd be happy to help you learn about connectivity. What specific aspects of connectivity are you interested in?"}
     ]
   }'
+```
+
+## Streamlit Frontend
+
+A Streamlit frontend is available in the `streamlit` directory. To run it:
+
+1. Install Streamlit:
+
+```bash
+pip install streamlit requests pandas
+```
+
+2. Run the Streamlit app:
+
+```bash
+cd streamlit
+streamlit run app.py
+```
+
+The Streamlit app will be available at http://localhost:8501
