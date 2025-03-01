@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-dotenv
+faiss-cpu
+llama-index
+llama-index-llms-groq
+llama-index-llms-gemini
+llama-index-embeddings-gemini
+llama-index-vector-stores-faiss
+pymupdf4llm
+requests
+beautifulsoup4
+loadenv
+pydantic
