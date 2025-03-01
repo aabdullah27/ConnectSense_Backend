@@ -110,6 +110,47 @@ python run.py
 
 The API will be available at http://localhost:8000
 
+## Deployment
+
+### Deploying to Vercel
+
+The application is configured for deployment on Vercel. Follow these steps to deploy:
+
+1. Install the Vercel CLI:
+
+```bash
+npm install -g vercel
+```
+
+2. Login to Vercel:
+
+```bash
+vercel login
+```
+
+3. Deploy the application:
+
+```bash
+vercel
+```
+
+4. Set environment variables in the Vercel dashboard:
+   - `GOOGLE_API_KEY`: Your Google API key for Gemini
+   - `GROQ_API_KEY`: Your Groq API key
+
+5. Update the Streamlit app's API URL:
+   - After deployment, update the `API_URL` in the Streamlit app to point to your Vercel deployment URL
+
+### Deploying the Streamlit App
+
+You can deploy the Streamlit app to Streamlit Cloud:
+
+1. Push your code to a GitHub repository
+2. Go to [Streamlit Cloud](https://streamlit.io/cloud)
+3. Connect your GitHub repository
+4. Set the main file path to `streamlit/app.py`
+5. Set the environment variable `API_URL` to your Vercel deployment URL
+
 ## Technical Features
 
 ### Automatic Index Creation

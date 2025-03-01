@@ -34,6 +34,23 @@ streamlit run app.py
 
 3. Open your browser and navigate to http://localhost:8501
 
+## Deployment
+
+You can deploy the Streamlit app to Streamlit Cloud:
+
+1. Push your code to a GitHub repository
+2. Go to [Streamlit Cloud](https://streamlit.io/cloud)
+3. Connect your GitHub repository
+4. Set the main file path to `streamlit/app.py`
+5. Set the environment variable `API_URL` to your FastAPI backend URL (e.g., your Vercel deployment URL)
+
+## Configuration for Deployment
+
+When deploying, make sure to:
+
+1. Set the `API_URL` environment variable to point to your deployed FastAPI backend
+2. If you're running locally but connecting to a deployed backend, you can enter the backend URL in the "API URL" field in the sidebar
+
 ## Configuration
 
 If your FastAPI backend is running on a different URL, you can change the `API_URL` variable in the `app.py` file.

@@ -51,21 +51,35 @@ async def get_open_api_endpoint():
 
 @app.get("/", include_in_schema=False)
 async def root():
-    return {"message": f"Welcome to {settings.APP_NAME}", "docs": "/docs"}
+    return {
+        "message": f"Welcome to {settings.APP_NAME}",
+        "status": "API is running",
+        "docs": "/docs",
+        "index_status": "Loaded" if vector_store_service.is_index_loaded() else "Not loaded"
+    }
 
 # Startup event to ensure vector index is initialized
 @app.on_event("startup")
 async def startup_event():
     """Ensure vector index is initialized when the application starts."""
-    # The vector_store_service singleton is already initialized when imported,
-    # which will automatically load or create the index as needed.
-    # This is just to make it explicit in the startup process.
-    if vector_store_service.index is None:
+    try:
+        # Try to load the index if it exists
+        if not vector_store_service.is_index_loaded():
+            # If index doesn't exist, try to create it from documents
+            documents = vector_store_service.load_documents_from_folder()
+            if documents:
+                print(f"Creating index from {len(documents)} documents...")
+                vector_store_service.create_index_in_batches(documents)
+                print("Index created successfully.")
+            else:
+                print("No documents found. Index not created.")
+        else:
+            # Count PDF files in data directory
+            pdf_files = glob.glob(f"{settings.DATA_DIR}/*.pdf")
+            print(f"Vector index initialized. Found {len(pdf_files)} PDF documents in data directory.")
+    except Exception as e:
+        print(f"Error initializing vector index: {str(e)}")
         print("WARNING: Vector index not initialized. Queries may fail.")
-    else:
-        # Count PDF files in data directory instead of trying to access internal structure
-        pdf_files = glob.glob(f"{settings.DATA_DIR}/*.pdf")
-        print(f"Vector index initialized. Found {len(pdf_files)} PDF documents in data directory.")
 
 if __name__ == "__main__":
     import uvicorn
